@@ -148,7 +148,17 @@
 									</td>
 									<td class="px-4 py-2">
 										<button
-											on:click={() => (item.showText = !item.showText)}
+											on:click={async () => {
+												if (!item.showText) {
+													if (item.textcontent === undefined) {
+														const res = await axios.get(`${API_URL}/speech/${item.id}`);
+														item.textcontent = res.data.data.textcontent;
+														item = item;
+													}
+												}
+												item.showText = !item.showText;
+												item = item;
+											}}
 											class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
 										>
 											{item.showText ? 'Hide' : 'Show'} Details

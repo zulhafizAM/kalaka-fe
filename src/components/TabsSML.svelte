@@ -320,11 +320,13 @@
 		}
 	}
 
-	// Function to open modal with audio details
-	function openDetailsModal(audio) {
+	async function openDetailsModal(audio: { id: number | string; textcontent?: string | null; [key: string]: unknown }) {
 		selectedAudio = audio;
-		console.log(audio);
 		showDetailsModal = true;
+		if (audio.textcontent === undefined) {
+			const res = await axios.get(`${API_URL}/speech/${audio.id}`);
+			selectedAudio = { ...selectedAudio, textcontent: res.data.data.textcontent };
+		}
 	}
 
 	// Function to close modal

@@ -171,8 +171,7 @@
 		currentPage = page;
 	}
 
-	// Open edit modal with item data
-	function openEditModal(item) {
+	async function openEditModal(item: { id: string; speaker_name: string; num_speakers: string; contact_no: string; origin: string; language: string; category: string; recordfile: string; rttm: string; textcontent?: string | null; textgrid_url: string; recorded_date: string; kalaka_id: string; public: string }) {
 		currentEditItem = item;
 		editForm = {
 			id: item.id,
@@ -191,6 +190,10 @@
 			public: item.public
 		};
 		showEditModal = true;
+		if (item.textcontent === undefined) {
+			const res = await axios.get(`${API_URL}/speech/${item.id}`);
+			editForm = { ...editForm, textcontent: res.data.data.textcontent };
+		}
 	}
 
 	// Close edit modal
