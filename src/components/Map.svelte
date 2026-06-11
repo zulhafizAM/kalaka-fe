@@ -79,16 +79,20 @@
 	});
 </script>
 
-<div class="flex h-screen">
+<div class="flex h-screen flex-col md:flex-row">
 	<!-- Map Section -->
 	<div
-		class="relative w-3/5 {mapLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500"
+		class="relative h-1/2 w-full md:h-full md:w-3/5 {mapLoaded
+			? 'opacity-100'
+			: 'opacity-0'} transition-opacity duration-500"
 	>
 		<div id="map" class="h-full w-full"></div>
 	</div>
 
 	<!-- Data Panel -->
-	<div class="w-2/5 overflow-y-auto border-l border-gray-200 bg-gray-50 p-5">
+	<div
+		class="h-1/2 w-full overflow-y-auto border-t border-gray-200 bg-gray-50 p-5 md:h-full md:w-2/5 md:border-l md:border-t-0"
+	>
 		<!-- Search Section -->
 		<div class="relative mb-5">
 			<input
@@ -123,8 +127,8 @@
 					>
 				</h2>
 
-				<div class="max-h-96 overflow-y-auto">
-					<table class="w-full text-sm">
+				<div class="max-h-96 overflow-x-auto overflow-y-auto">
+					<table class="w-full min-w-[480px] text-sm">
 						<thead class="bg-gray-50">
 							<tr>
 								<th class="px-4 py-2 text-left">Name</th>

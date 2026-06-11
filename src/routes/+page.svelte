@@ -20,9 +20,9 @@
           </div>
 
           <!-- Right Column (YouTube Video) -->
-          <div class=" ml-5 mr-5 pl-10 flex flex-col items-center">
+          <div class="flex w-full flex-col items-center md:w-auto md:flex-1">
             <iframe
-                class="w-96 h-56 aspect-video rounded-lg mb-4"
+                class="mb-4 aspect-video w-full max-w-md rounded-lg"
                 src="https://www.youtube.com/embed/TesXslhuOEE?si=G39BGtWrECd-UJNL"
                 title="YouTube video player"
                 frameborder="0"
@@ -50,7 +50,7 @@
   </section>
 
   <section>
-    <div class="flex justify-evenly mb-5 p-10">
+    <div class="mb-5 grid grid-cols-1 gap-6 p-4 sm:p-10 md:grid-cols-3">
       <Card class="p-4 sm:p-6 md:p-8">
           <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Expand Your Vocabulary with Our Word of the Day</h5>
           <p class="mb-3 leading-tight font-normal text-gray-700 dark:text-gray-400">Learn a new word each day and watch your vocabulary grow.</p>
