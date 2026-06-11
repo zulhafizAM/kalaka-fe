@@ -26,6 +26,7 @@
 <Navbar style="background-color: #092e6d;" class="p-0">
 	<NavBrand href="/">
 		<img src="/kalaka_home.png" class="me-4 h-10 sm:h-20" alt="Kalaka Logo" />
+		<span class="text-white font-semibold text-sm sm:text-base leading-tight">Language Map of Malaysia</span>
 	</NavBrand>
 	<NavHamburger />
 	<NavUl>
