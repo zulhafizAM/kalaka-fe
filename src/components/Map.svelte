@@ -25,8 +25,10 @@
 		const locationsData = locationRes.data;
 
 		// Group speeches by origin, matched with coordinates
+		// Only publicly approved recordings (public === 2) are shown on the map.
 		const originMap = {};
 		for (const speech of speeches) {
+			if (Number(speech.public) !== 2) continue;
 			if (!speech.origin) continue;
 			if (!originMap[speech.origin]) originMap[speech.origin] = [];
 			originMap[speech.origin].push(speech);

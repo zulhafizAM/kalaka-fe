@@ -270,8 +270,16 @@
 	}
 
 	// Open edit modal with item data
-	function openEditModal(item) {
+	async function openEditModal(item) {
 		currentEditItem = item;
+		// The /speeches list endpoint omits textcontent, so fetch the full record.
+		// Resolve it before opening the modal: the contenteditable below binds
+		// innerHTML on mount and won't pick up a value set after it renders.
+		let textcontent = item.textcontent;
+		if (textcontent === undefined) {
+			const res = await axios.get(`${API_URL}/speech/${item.id}`);
+			textcontent = res.data.data.textcontent;
+		}
 		editForm = {
 			id: item.id,
 			speaker_name: item.speaker_name,
@@ -282,7 +290,7 @@
 			category: item.category,
 			recordfile: item.recordfile,
 			rttm: item.rttm,
-			textcontent: item.textcontent,
+			textcontent: textcontent ?? '',
 			textgrid_url: item.textgrid_url,
 			recorded_date: item.recorded_date,
 			kalaka_id: item.kalaka_id,

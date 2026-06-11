@@ -215,6 +215,14 @@
 
 	async function openEditModal(item: { id: string; speaker_name: string; num_speakers: string; contact_no: string; origin: string; language: string; category: string; recordfile: string; rttm: string; textcontent?: string | null; textgrid_url: string; recorded_date: string; kalaka_id: string; public: string }) {
 		currentEditItem = item;
+		// The /speeches list endpoint omits textcontent, so fetch the full record.
+		// Resolve it before opening the modal: the contenteditable below binds
+		// innerHTML on mount and won't pick up a value set after it renders.
+		let textcontent = item.textcontent;
+		if (textcontent === undefined) {
+			const res = await axios.get(`${API_URL}/speech/${item.id}`);
+			textcontent = res.data.data.textcontent;
+		}
 		editForm = {
 			id: item.id,
 			speaker_name: item.speaker_name,
@@ -225,17 +233,13 @@
 			category: item.category,
 			recordfile: item.recordfile,
 			rttm: item.rttm,
-			textcontent: item.textcontent,
+			textcontent: textcontent ?? '',
 			textgrid_url: item.textgrid_url,
 			recorded_date: item.recorded_date,
 			kalaka_id: item.kalaka_id,
 			public: item.public
 		};
 		showEditModal = true;
-		if (item.textcontent === undefined) {
-			const res = await axios.get(`${API_URL}/speech/${item.id}`);
-			editForm = { ...editForm, textcontent: res.data.data.textcontent };
-		}
 	}
 
 	// Close edit modal
