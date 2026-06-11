@@ -4,10 +4,11 @@
 	import { goto } from '$app/navigation';
 	import { getSession } from '$lib/auth.ts';
 	import axios from 'axios';
+	import Sidebar from '../Sidebar.svelte';
+	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-	let isSidebarOpen = true;
 	let userID = '';
 	let speakers = '';
 	let selectedGender = '';
@@ -18,10 +19,6 @@
 	let locations = [];
 	let languages = [];
 	let errorMessage = '';
-
-	function toggleSidebar() {
-		isSidebarOpen = !isSidebarOpen;
-	}
 
 	onMount(async () => {
 		const session = await getSession();
@@ -62,46 +59,19 @@
 </script>
 
 <div class="flex min-h-screen bg-gray-100">
-	<!-- Sidebar -->
-	<div
-		class={`w-56 space-y-6 bg-blue-900 p-5 text-white transition-transform duration-300
-    ${isSidebarOpen ? 'block' : '-translate-x-64 md:translate-x-0'}`}
-	>
-		<div class="flex items-center justify-between">
-			<h2 class="text-2xl font-bold">Admin Dashboard</h2>
-			<button class="text-white md:hidden" on:click={toggleSidebar}>✖</button>
-		</div>
-
-		<nav class="space-y-2">
-			<a href="/AdminDashboard" class="block rounded px-4 py-2 hover:bg-blue-700">Home</a>
-			<a href="/AdminLanguageStatistic" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Statistics</a
-			>
-			<a href="/AdminAddWord" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Word</a>
-			<a href="/AdminAddQuiz" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Quiz</a>
-			<a href="/AdminUserManagement" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>User Management</a
-			>
-			<a href="/AdminSpeechData" class="block rounded px-4 py-2 hover:bg-blue-700">Speech Data</a>
-			<a href="/AdminSpeakerProfile" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Profile</a
-			>
-			<a href="/AdminAddSpeaker" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Add New Speaker</a
-			>
-			<a href="/AdminAddSpeech" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speech</a>
-			<a href="/Kalaka_Admin_Manual.pdf" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Admin Guide</a
-			>
-			<a href="/AdminProfile" class="block rounded px-4 py-2 hover:bg-blue-700">Profile</a>
-			<a href="/Logout" class="block rounded px-4 py-2 hover:bg-blue-700">Logout</a>
-		</nav>
-	</div>
+	<Sidebar role="admin" />
 
 	<!-- Main Content -->
-	<div class="flex flex-1 flex-col p-2">
-		<div class="flex items-center justify-between bg-white p-4 shadow">
-			<button class="text-blue-900 md:hidden" on:click={toggleSidebar}>☰</button>
+	<div class="flex w-full min-w-0 flex-1 flex-col p-2">
+		<div class="flex items-center gap-3 bg-white p-4 shadow">
+			<button
+				type="button"
+				class="text-blue-900 md:hidden"
+				aria-label="Open menu"
+				on:click={() => sidebarOpen.set(true)}
+			>
+				☰
+			</button>
 			<h1 class="text-xl font-bold">Add Speaker</h1>
 		</div>
 

@@ -3,6 +3,8 @@
 	import { Button, Input, Textarea } from 'flowbite-svelte';
 	import { goto } from '$app/navigation';
 	import axios from 'axios';
+	import Sidebar from './Sidebar.svelte';
+	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -165,32 +167,22 @@
 </script>
 
 <div class="flex min-h-screen bg-gray-50">
-	<!-- Sidebar -->
-	<div class="sidebar w-56 space-y-6 bg-blue-900 p-5 text-white">
-		<h2 class="text-2xl font-bold">User Dashboard</h2>
-		<nav class="space-y-2">
-			<a href="/Dashboard" class="block rounded px-4 py-2 hover:bg-blue-700">Home</a>
-			<a href="/Speech_Data" class="block rounded px-4 py-2 hover:bg-blue-700">Speech Data</a>
-			<a href="/Speaker_Profile" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Profile</a
-			>
-			<a href="/Add_Speaker" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speaker</a>
-			<a href="/Add_New_Speech" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speech</a>
-			<a href="/Contact_Us" class="block rounded px-4 py-2 hover:bg-blue-700">Contact Us</a>
-			<a href="/Kalaka_User_Manual.pdf" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>User Guide</a
-			>
-			<a href="/Profile" class="block rounded px-4 py-2 hover:bg-blue-700">Profile</a>
-			<a href="/Logout" class="block rounded px-4 py-2 hover:bg-blue-700">Logout</a>
-		</nav>
-	</div>
+	<Sidebar role="user" />
 
-	<div class="flex min-h-screen flex-1 flex-col p-6">
-		<div class="header flex items-center justify-between bg-white p-4 shadow">
+	<div class="flex w-full min-w-0 flex-1 flex-col p-4 sm:p-6">
+		<div class="header flex items-center gap-3 bg-white p-4 shadow">
+			<button
+				type="button"
+				class="text-blue-900 md:hidden"
+				aria-label="Open menu"
+				on:click={() => sidebarOpen.set(true)}
+			>
+				☰
+			</button>
 			<h1 class="text-xl font-bold">Add New Speech</h1>
 		</div>
 
-		<main class="flex-1 px-6 py-8">
+		<main class="flex-1 px-2 py-8 sm:px-6">
 			<form on:submit={handleSubmit} class="space-y-6 rounded-lg bg-white p-6 shadow">
 				<div>
 					<!-- svelte-ignore a11y_label_has_associated_control -->

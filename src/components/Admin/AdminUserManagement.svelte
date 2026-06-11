@@ -13,6 +13,8 @@
 	} from 'flowbite-svelte';
 	import { onMount } from 'svelte';
 	import { getSession } from '$lib/auth.ts';
+	import Sidebar from '../Sidebar.svelte';
+	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 	let speakerData: Record<string, any>[] = [];
@@ -166,37 +168,21 @@
 </script>
 
 <div class="bg-gray-45 flex min-h-screen">
-	<div class="sidebar w-56 space-y-6 bg-blue-900 p-5 text-white">
-		<h2 class="text-2xl font-bold">Admin Dashboard</h2>
-		<nav class="space-y-2">
-			<a href="/AdminDashboard" class="block rounded px-4 py-2 hover:bg-blue-700">Home</a>
-			<a href="/AdminLanguageStatistic" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Statistics</a
-			>
-			<a href="/AdminAddWord" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Word</a>
-			<a href="/AdminAddQuiz" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Quiz</a>
-			<a href="/AdminUserManagement" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>User Management</a
-			>
-			<a href="/AdminSpeechData" class="block rounded px-4 py-2 hover:bg-blue-700">Speech Data</a>
-			<a href="/AdminSpeakerProfile" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Profile</a
-			>
-			<a href="/AdminAddSpeaker" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Add New Speaker</a
-			>
-			<a href="/AdminAddSpeech" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speech</a>
-			<a href="/Kalaka_Admin_Manual.pdf" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Admin Guide</a
-			>
-			<a href="/AdminProfile" class="block rounded px-4 py-2 hover:bg-blue-700">Profile</a>
-			<a href="/Logout" class="block rounded px-4 py-2 hover:bg-blue-700">Logout</a>
-		</nav>
-	</div>
+	<Sidebar role="admin" />
 
-	<div class="flex-1 p-6">
-		<div class="header mb-4 flex items-center justify-between bg-white p-4 shadow">
-			<h1 class="text-xl font-bold">User Management</h1>
+	<div class="w-full min-w-0 flex-1 p-4 sm:p-6">
+		<div class="header mb-4 flex items-center justify-between gap-3 bg-white p-4 shadow">
+			<div class="flex items-center gap-3">
+				<button
+					type="button"
+					class="text-blue-900 md:hidden"
+					aria-label="Open menu"
+					on:click={() => sidebarOpen.set(true)}
+				>
+					☰
+				</button>
+				<h1 class="text-xl font-bold">User Management</h1>
+			</div>
 			<Button on:click={openAddModal} class="bg-blue-600 text-white">+ Add User</Button>
 		</div>
 
@@ -222,7 +208,7 @@
 		</div>
 
 		<!-- User Table -->
-		<div class="hidden-print rounded bg-white p-4 shadow">
+		<div class="hidden-print overflow-x-auto rounded bg-white p-4 shadow">
 			<Table>
 				<TableHead>
 					<TableHeadCell>No</TableHeadCell>
@@ -456,7 +442,6 @@
 		:global(.navbar),
 		:global(.breadcrumb),
 		:global(.footer),
-		.sidebar,
 		.header,
 		.searchfilter,
 		.hidden-print,

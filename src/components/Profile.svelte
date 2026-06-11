@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import { getSession } from '$lib/auth.ts';
 	import axios from 'axios';
+	import Sidebar from './Sidebar.svelte';
+	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -53,37 +55,27 @@
 </script>
 
 <div class="flex min-h-screen bg-gray-50">
-	<!-- Sidebar -->
-	<div class="w-56 space-y-6 bg-blue-900 p-5 text-white">
-		<h2 class="text-2xl font-bold">Dashboard</h2>
-		<nav class="space-y-2">
-			<a href="/Dashboard" class="block rounded px-4 py-2 hover:bg-blue-700">Home</a>
-			<a href="/Speech_Data" class="block rounded px-4 py-2 hover:bg-blue-700">Speech Data</a>
-			<a href="/Speaker_Profile" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Profile</a
-			>
-			<a href="/Add_Speaker" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speaker</a>
-			<a href="/Add_New_Speech" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speech</a>
-			<a href="/Contact_Us" class="block rounded px-4 py-2 hover:bg-blue-700">Contact Us</a>
-			<a href="/Kalaka_User_Manual.pdf" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>User Guide</a
-			>
-			<a href="/Profile" class="block rounded px-4 py-2 hover:bg-blue-700">Profile</a>
-			<a href="/Logout" class="block rounded px-4 py-2 hover:bg-blue-700">Logout</a>
-		</nav>
-	</div>
+	<Sidebar role="user" />
 
 	<!-- Main Content -->
-	<div class="flex-1 p-6">
-		<div class="mb-4 flex items-center justify-between bg-white p-4 shadow">
+	<div class="w-full min-w-0 flex-1 p-4 sm:p-6">
+		<div class="mb-4 flex items-center gap-3 bg-white p-4 shadow">
+			<button
+				type="button"
+				class="text-blue-900 md:hidden"
+				aria-label="Open menu"
+				on:click={() => sidebarOpen.set(true)}
+			>
+				☰
+			</button>
 			<h1 class="text-xl font-bold">Profile</h1>
 		</div>
 
 		{#if currentUser}
-			<div class="flex justify-center p-8">
-				<div class="flex w-full max-w-6xl gap-6">
+			<div class="flex justify-center p-4 sm:p-8">
+				<div class="flex w-full max-w-6xl flex-col gap-6 md:flex-row">
 					<!-- Profile Section -->
-					<div class="w-1/2 space-y-6 rounded-lg bg-white p-6 shadow-lg">
+					<div class="w-full space-y-6 rounded-lg bg-white p-6 shadow-lg md:w-1/2">
 						<h2 class="text-center text-2xl font-bold">Profile</h2>
 
 						<div class="space-y-4">
@@ -142,7 +134,7 @@
 					</div>
 
 					<!-- Change Password Section -->
-					<div class="w-1/2 space-y-6 rounded-lg bg-white p-6 shadow-lg">
+					<div class="w-full space-y-6 rounded-lg bg-white p-6 shadow-lg md:w-1/2">
 						<h3 class="text-center text-2xl font-bold">Change Password</h3>
 
 						<div class="space-y-4">

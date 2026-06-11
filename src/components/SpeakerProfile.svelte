@@ -13,6 +13,8 @@
 		TableHeadCell
 	} from 'flowbite-svelte';
 	import { onMount } from 'svelte';
+	import Sidebar from './Sidebar.svelte';
+	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	// import { speakerData } from '../backend/speakers.js';
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -117,29 +119,19 @@
 
 <!-- Layout -->
 <div class="bg-gray-45 flex min-h-screen">
-	<!-- Sidebar -->
-	<div class="sidebar w-56 space-y-6 bg-blue-900 p-5 text-white">
-		<h2 class="text-2xl font-bold">User Dashboard</h2>
-		<nav class="space-y-2">
-			<a href="/Dashboard" class="block rounded px-4 py-2 hover:bg-blue-700">Home</a>
-			<a href="/Speech_Data" class="block rounded px-4 py-2 hover:bg-blue-700">Speech Data</a>
-			<a href="/Speaker_Profile" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>Speaker Profile</a
-			>
-			<a href="/Add_Speaker" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speaker</a>
-			<a href="/Add_New_Speech" class="block rounded px-4 py-2 hover:bg-blue-700">Add New Speech</a>
-			<a href="/Contact_Us" class="block rounded px-4 py-2 hover:bg-blue-700">Contact Us</a>
-			<a href="/Kalaka_User_Manual.pdf" class="block rounded px-4 py-2 hover:bg-blue-700"
-				>User Guide</a
-			>
-			<a href="/Profile" class="block rounded px-4 py-2 hover:bg-blue-700">Profile</a>
-			<a href="/Logout" class="block rounded px-4 py-2 hover:bg-blue-700">Logout</a>
-		</nav>
-	</div>
+	<Sidebar role="user" />
 
 	<!-- Main Content -->
-	<div class="flex-1 p-6">
-		<div class="header mb-4 flex items-center justify-between bg-white p-4 shadow">
+	<div class="w-full min-w-0 flex-1 p-4 sm:p-6">
+		<div class="header mb-4 flex items-center gap-3 bg-white p-4 shadow">
+			<button
+				type="button"
+				class="text-blue-900 md:hidden"
+				aria-label="Open menu"
+				on:click={() => sidebarOpen.set(true)}
+			>
+				☰
+			</button>
 			<h1 class="text-xl font-bold">Speaker Profile</h1>
 		</div>
 
@@ -163,7 +155,7 @@
 		</div>
 
 		<!-- Table -->
-		<div class="hidden-print rounded bg-white p-4 shadow">
+		<div class="hidden-print overflow-x-auto rounded bg-white p-4 shadow">
 			<Table>
 				<TableHead>
 					<TableHeadCell>#</TableHeadCell>
@@ -340,7 +332,6 @@
 		:global(.navbar),
 		:global(.breadcrumb),
 		:global(.footer),
-		.sidebar,
 		.header,
 		.searchfilter,
 		.hidden-print,
