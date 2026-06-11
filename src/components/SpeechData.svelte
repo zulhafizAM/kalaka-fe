@@ -33,6 +33,51 @@
 	let showEditModal = false;
 	let currentEditItem = null;
 
+	// Dropdown source data (for the edit modal)
+	let speakerData = [];
+	let categoryData = [];
+	let languageData = [];
+	let locationData = [];
+
+	// Dropdown open states
+	let isSpeakerOpen = false;
+	let isOriginOpen = false;
+	let isLanguageOpen = false;
+	let isCategoryOpen = false;
+
+	// Dropdown search terms
+	let speakerSearch = '';
+	let originSearch = '';
+	let languageSearch = '';
+	let categorySearch = '';
+
+	$: filteredSpeakers = speakerSearch
+		? speakerData.filter((s) => s.name.toLowerCase().includes(speakerSearch.toLowerCase()))
+		: speakerData;
+	$: filteredOrigins = originSearch
+		? locationData.filter((o) => o.name.toLowerCase().includes(originSearch.toLowerCase()))
+		: locationData;
+	$: filteredLanguages = languageSearch
+		? languageData.filter((l) => l.name.toLowerCase().includes(languageSearch.toLowerCase()))
+		: languageData;
+	$: filteredCategories = categorySearch
+		? categoryData.filter((c) => c.name.toLowerCase().includes(categorySearch.toLowerCase()))
+		: categoryData;
+
+	function clickOutside(node, callback) {
+		const handleClick = (event) => {
+			if (node && !node.contains(event.target)) {
+				callback();
+			}
+		};
+		document.addEventListener('click', handleClick, true);
+		return {
+			destroy() {
+				document.removeEventListener('click', handleClick, true);
+			}
+		};
+	}
+
 	// Audio Player (unchanged)
 	let play = false;
 	let time = 0;
@@ -248,9 +293,20 @@
 
 		try {
 			// Fetch all needed data in parallel
-			const [speechRes] = await Promise.all([axios.post(`${API_URL}/speeches`)]);
+			const [speechRes, speakersRes, categoriesRes, languagesRes, locationsRes] =
+				await Promise.all([
+					axios.post(`${API_URL}/speeches`),
+					axios.post(`${API_URL}/speakers`),
+					axios.get(`${API_URL}/categories`),
+					axios.get(`${API_URL}/languages`),
+					axios.post(`${API_URL}/locations`)
+				]);
 
 			speechData = speechRes.data.filter((e: any) => e.kalaka_id === currentUser.kalaka_id);
+			speakerData = speakersRes.data;
+			categoryData = categoriesRes.data;
+			languageData = languagesRes.data;
+			locationData = locationsRes.data;
 		} catch (err) {
 			error = err.response?.data?.message || err.message;
 			console.error('Error fetching data:', err);
@@ -371,7 +427,7 @@
 						<TableHeadCell class="w-32">Recorded Date</TableHeadCell>
 					</TableHead>
 					<TableBody tableBodyClass="divide-y">
-						{#each paginatedItems as file, index}
+						{#each paginatedItems as file, index (file.id)}
 							<TableBodyRow>
 								<TableBodyCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableBodyCell>
 								<TableBodyCell>
@@ -390,9 +446,7 @@
 								<TableBodyCell class="max-w-[100px] truncate">{file.language}</TableBodyCell>
 								<TableBodyCell class="max-w-[100px] truncate">{file.category}</TableBodyCell>
 								<TableBodyCell>
-									<audio controls class="w-full max-w-[200px]">
-										<source src={`${API_URL}/audio/` + file.recordfile} type="audio/mpeg" />
-									</audio>
+									<audio controls class="w-full max-w-[200px]" src={`${API_URL}/audio/` + file.recordfile}></audio>
 								</TableBodyCell>
 								<TableBodyCell>
 									{#if file.rttm}
@@ -474,7 +528,51 @@
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			<div>
 				<label class="mb-2 block text-sm font-medium text-gray-900">Speaker Name</label>
-				<Input bind:value={editForm.speaker_name} />
+				<div class="relative" use:clickOutside={() => (isSpeakerOpen = false)}>
+					<button
+						type="button"
+						class="w-full rounded-md border bg-white px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 {!editForm.speaker_name
+							? 'text-gray-400'
+							: ''}"
+						on:click={() => {
+							isSpeakerOpen = !isSpeakerOpen;
+							if (isSpeakerOpen) speakerSearch = '';
+						}}
+					>
+						{editForm.speaker_name || "Choose speaker's name"}
+					</button>
+					{#if isSpeakerOpen}
+						<div
+							class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-300 bg-white py-1 shadow-lg"
+						>
+							<div class="border-b p-2">
+								<input
+									type="text"
+									bind:value={speakerSearch}
+									placeholder="Search speakers..."
+									class="w-full rounded border p-2"
+									on:click|stopPropagation
+								/>
+							</div>
+							{#each filteredSpeakers as s}
+								<button
+									type="button"
+									class="w-full px-3 py-2 text-left hover:bg-gray-100"
+									on:click={() => {
+										editForm.speaker_name = s.name;
+										if (s.origin) editForm.origin = s.origin;
+										if (s.mobile) editForm.contact_no = s.mobile;
+										isSpeakerOpen = false;
+									}}
+								>
+									{s.name}
+								</button>
+							{:else}
+								<div class="px-3 py-2 text-gray-500">No speakers found</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 			<div>
 				<label class="mb-2 block text-sm font-medium text-gray-900">Number of Speakers</label>
@@ -486,15 +584,141 @@
 			</div>
 			<div>
 				<label class="mb-2 block text-sm font-medium text-gray-900">Origin</label>
-				<Input bind:value={editForm.origin} />
+				<div class="relative" use:clickOutside={() => (isOriginOpen = false)}>
+					<button
+						type="button"
+						class="w-full rounded-md border bg-white px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 {!editForm.origin
+							? 'text-gray-400'
+							: ''}"
+						on:click={() => {
+							isOriginOpen = !isOriginOpen;
+							if (isOriginOpen) originSearch = '';
+						}}
+					>
+						{editForm.origin || 'Select Origin'}
+					</button>
+					{#if isOriginOpen}
+						<div
+							class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-300 bg-white py-1 shadow-lg"
+						>
+							<div class="border-b p-2">
+								<input
+									type="text"
+									bind:value={originSearch}
+									placeholder="Search origins..."
+									class="w-full rounded border p-2"
+									on:click|stopPropagation
+								/>
+							</div>
+							{#each filteredOrigins as o}
+								<button
+									type="button"
+									class="w-full px-3 py-2 text-left hover:bg-gray-100"
+									on:click={() => {
+										editForm.origin = o.name;
+										isOriginOpen = false;
+									}}
+								>
+									{o.name}
+								</button>
+							{:else}
+								<div class="px-3 py-2 text-gray-500">No origins found</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 			<div>
 				<label class="mb-2 block text-sm font-medium text-gray-900">Language</label>
-				<Input bind:value={editForm.language} />
+				<div class="relative" use:clickOutside={() => (isLanguageOpen = false)}>
+					<button
+						type="button"
+						class="w-full rounded-md border bg-white px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 {!editForm.language
+							? 'text-gray-400'
+							: ''}"
+						on:click={() => {
+							isLanguageOpen = !isLanguageOpen;
+							if (isLanguageOpen) languageSearch = '';
+						}}
+					>
+						{editForm.language || 'Select Language'}
+					</button>
+					{#if isLanguageOpen}
+						<div
+							class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-300 bg-white py-1 shadow-lg"
+						>
+							<div class="border-b p-2">
+								<input
+									type="text"
+									bind:value={languageSearch}
+									placeholder="Search languages..."
+									class="w-full rounded border p-2"
+									on:click|stopPropagation
+								/>
+							</div>
+							{#each filteredLanguages as l}
+								<button
+									type="button"
+									class="w-full px-3 py-2 text-left hover:bg-gray-100"
+									on:click={() => {
+										editForm.language = l.name;
+										isLanguageOpen = false;
+									}}
+								>
+									{l.name}
+								</button>
+							{:else}
+								<div class="px-3 py-2 text-gray-500">No languages found</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 			<div>
 				<label class="mb-2 block text-sm font-medium text-gray-900">Category</label>
-				<Input bind:value={editForm.category} />
+				<div class="relative" use:clickOutside={() => (isCategoryOpen = false)}>
+					<button
+						type="button"
+						class="w-full rounded-md border bg-white px-3 py-2 text-left focus:outline-none focus:ring-2 focus:ring-blue-500 {!editForm.category
+							? 'text-gray-400'
+							: ''}"
+						on:click={() => {
+							isCategoryOpen = !isCategoryOpen;
+							if (isCategoryOpen) categorySearch = '';
+						}}
+					>
+						{editForm.category || 'Select Category'}
+					</button>
+					{#if isCategoryOpen}
+						<div
+							class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-300 bg-white py-1 shadow-lg"
+						>
+							<div class="border-b p-2">
+								<input
+									type="text"
+									bind:value={categorySearch}
+									placeholder="Search categories..."
+									class="w-full rounded border p-2"
+									on:click|stopPropagation
+								/>
+							</div>
+							{#each filteredCategories as c}
+								<button
+									type="button"
+									class="w-full px-3 py-2 text-left hover:bg-gray-100"
+									on:click={() => {
+										editForm.category = c.name;
+										isCategoryOpen = false;
+									}}
+								>
+									{c.name}
+								</button>
+							{:else}
+								<div class="px-3 py-2 text-gray-500">No categories found</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 			<div>
 				<label class="mb-2 block text-sm font-medium text-gray-900">Audio URL</label>

@@ -365,8 +365,10 @@
 		}));
 	}
 
-	$: filteredData = items.filter((file) =>
-		file.speaker_name.toLowerCase().includes(searchTermm.toLowerCase())
+	$: filteredData = items.filter(
+		(file) =>
+			Number(file.public) === 2 &&
+			file.speaker_name.toLowerCase().includes(searchTermm.toLowerCase())
 	);
 
 	$: totalItems = filteredData.length;
@@ -837,16 +839,14 @@
 						<TableHeadCell class="w-32">Actions</TableHeadCell>
 					</TableHead>
 					<TableBody tableBodyClass="divide-y">
-						{#each paginatedItems as file}
+						{#each paginatedItems as file (file.id)}
 							<TableBodyRow>
 								<TableBodyCell>{file.id}</TableBodyCell>
 								<TableBodyCell class="max-w-[250px] truncate">{file.speaker_name}</TableBodyCell>
 								<TableBodyCell class="max-w-[100px] truncate">{file.origin}</TableBodyCell>
 								<TableBodyCell class="max-w-[100px] truncate">{file.language}</TableBodyCell>
 								<TableBodyCell>
-									<audio controls class="w-full max-w-[200px]">
-										<source src={`${API_URL}/audio/` + file.recordfile} type="audio/mpeg" />
-									</audio>
+									<audio controls class="w-full max-w-[200px]" src={`${API_URL}/audio/` + file.recordfile}></audio>
 								</TableBodyCell>
 								<TableBodyCell>{file.recorded_date}</TableBodyCell>
 								<TableBodyCell>
