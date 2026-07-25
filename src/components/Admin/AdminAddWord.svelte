@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import axios from 'axios';
 	import Sidebar from '../Sidebar.svelte';
+	import TableControls from '../TableControls.svelte';
 	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
@@ -10,7 +11,6 @@
 	let phoneme = '';
 	let meaning = '';
 	let editingId = null;
-	let searchQuery = '';
 	let words = [];
 	let isLoading = false;
 	let error = null;
@@ -31,14 +31,14 @@
 		}
 	}
 
-	$: filtered = searchQuery
-		? words.filter(
-				(entry) =>
-					entry.word.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					entry.phoneme.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					entry.meaning.toLowerCase().includes(searchQuery.toLowerCase())
-			)
-		: words;
+	// Columns exposed to the dynamic search/filter toolbar.
+	const tableColumns = [
+		{ key: 'word', label: 'Word' },
+		{ key: 'phoneme', label: 'Phoneme' },
+		{ key: 'meaning', label: 'Meaning' }
+	];
+
+	let filtered = [];
 
 	async function submitWord() {
 		if (!word || !phoneme || !meaning) {
@@ -172,14 +172,12 @@
 				<!-- Word List Table -->
 				<div class="flex-1 overflow-hidden rounded-2xl bg-white p-6 shadow-lg">
 					<h2 class="mb-4 text-lg font-semibold">Word List ({filtered.length})</h2>
-					<div class="mb-4">
-						<input
-							type="text"
-							bind:value={searchQuery}
-							placeholder="Search words..."
-							class="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-						/>
-					</div>
+					<TableControls
+						rows={words}
+						columns={tableColumns}
+						bind:filtered
+						searchPlaceholder="Search words..."
+					/>
 
 					{#if isLoading}
 						<p class="py-8 text-center text-gray-500">Loading...</p>
@@ -222,9 +220,9 @@
 									{:else}
 										<tr
 											><td colspan="4" class="text-center py-6 text-gray-500"
-												>No words found{#if searchQuery}
-													for "{searchQuery}"{:else}
-													— add your first word!{/if}</td
+												>{words.length
+													? 'No words match your search or filters.'
+													: 'No words found — add your first word!'}</td
 											></tr
 										>
 									{/each}

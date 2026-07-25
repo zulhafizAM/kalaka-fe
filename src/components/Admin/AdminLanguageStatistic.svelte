@@ -13,14 +13,11 @@
 	} from 'flowbite-svelte';
 	import axios from 'axios';
 	import Sidebar from '../Sidebar.svelte';
+	import TableControls from '../TableControls.svelte';
 	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 
-	let filterType = 'all';
-	let filterValue = '';
-	let genderFilter = '';
-	let searchQuery = '';
 	let sortDirection = 'asc';
 	let sortColumn = 'name';
 
@@ -60,46 +57,47 @@
 				category: speakerSpeeches[0]?.category || '',
 				gender: s.gender,
 				speechFiles,
-				transcription: transcriptions
+				transcription: transcriptions,
+				// Scalar mirrors of the arrays, so they can be searched and filtered.
+				speech_count: speechFiles.length,
+				transcription_count: transcriptions.length
 			};
 		});
 
 		loading = false;
 	});
 
-	$: filteredData = tableData
-		.filter((item) => {
-			if (filterType !== 'all' && filterValue !== '') {
-				return item[filterType] === filterValue;
-			}
-			return true;
-		})
-		.filter((item) => (genderFilter ? item.gender === genderFilter : true))
-		.filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-		.sort((a, b) => {
-			let valA = a[sortColumn];
-			let valB = b[sortColumn];
+	// Columns exposed to the dynamic search/filter toolbar.
+	const tableColumns = [
+		{ key: 'name', label: 'Name' },
+		{ key: 'age', label: 'Age' },
+		{ key: 'gender', label: 'Gender' },
+		{ key: 'origin', label: 'Origin' },
+		{ key: 'language', label: 'Language' },
+		{ key: 'category', label: 'Category' },
+		{ key: 'speech_count', label: 'Total Recorded Speech' },
+		{ key: 'transcription_count', label: 'Transcriptions' }
+	];
 
-			if (sortColumn === 'speechFiles') {
-				valA = valA.length;
-				valB = valB.length;
-			}
+	/** Rows after search + filters; sorting is applied on top. */
+	let queried = [];
 
-			if (typeof valA === 'string') valA = valA.toLowerCase();
-			if (typeof valB === 'string') valB = valB.toLowerCase();
+	$: filteredData = [...queried].sort((a, b) => {
+		let valA = a[sortColumn];
+		let valB = b[sortColumn];
 
-			if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-			if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-			return 0;
-		});
+		if (sortColumn === 'speechFiles') {
+			valA = valA.length;
+			valB = valB.length;
+		}
 
-	function getOptions() {
-		if (filterType === 'origin') return locations.map((l) => l.name);
-		if (filterType === 'language') return languages.map((l) => l.name);
-		if (filterType === 'category') return categories.map((c) => c.name);
-		if (filterType === 'gender') return [...new Set(speakers.map((s) => s.gender))];
-		return [];
-	}
+		if (typeof valA === 'string') valA = valA.toLowerCase();
+		if (typeof valB === 'string') valB = valB.toLowerCase();
+
+		if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+		if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+		return 0;
+	});
 
 	$: maleCount = filteredData.filter((item) => item.gender === 'Male').length;
 	$: femaleCount = filteredData.filter((item) => item.gender === 'Female').length;
@@ -146,26 +144,6 @@
 			{#if loading}
 				<p class="text-center text-gray-500">Loading data...</p>
 			{:else}
-				<!-- Filters -->
-				<div class="hidden-print mb-4 flex flex-wrap gap-4">
-					<Select bind:value={filterType} class="w-1/4">
-						<option value="all">Show All</option>
-						<option value="origin">Origin</option>
-						<option value="language">Language</option>
-						<option value="category">Category</option>
-						<option value="gender">Gender</option>
-					</Select>
-
-					{#if filterType !== 'all'}
-						<Select bind:value={filterValue} class="w-1/4">
-							<option value="">-- Select --</option>
-							{#each getOptions() as option}
-								<option value={option}>{option}</option>
-							{/each}
-						</Select>
-					{/if}
-				</div>
-
 				<!-- Summary Boxes -->
 				<div class="summary-boxes hidden-print mb-6 flex flex-wrap gap-6">
 					<div class="w-64 rounded-xl border border-yellow-300 bg-yellow-100 p-6 shadow">
@@ -187,37 +165,27 @@
 				</div>
 
 				<!-- Tools -->
-				<div class="hidden-print mb-6 flex flex-wrap gap-4">
-					{#if filterType !== 'gender'}
-						<Select bind:value={genderFilter} class="w-1/6">
-							<option value="">All Genders</option>
-							<option value="Male">Male</option>
-							<option value="Female">Female</option>
-						</Select>
-					{/if}
+				<TableControls
+					rows={tableData}
+					columns={tableColumns}
+					bind:filtered={queried}
+					searchPlaceholder="Search speakers..."
+				>
+					<Select bind:value={sortColumn} class="w-full sm:w-52">
+						<option value="id">Sort: #</option>
+						<option value="name">Sort: Name</option>
+						<option value="age">Sort: Age</option>
+						<option value="origin">Sort: Origin</option>
+						<option value="speechFiles">Sort: Total Recorded Speech</option>
+					</Select>
 
-					<Input
-						type="text"
-						placeholder="Search by name..."
-						bind:value={searchQuery}
-						class="input w-1/3"
-					/>
-
-					<Select bind:value={sortDirection} class="w-1/6">
+					<Select bind:value={sortDirection} class="w-full sm:w-36">
 						<option value="asc">Ascending</option>
 						<option value="desc">Descending</option>
 					</Select>
 
-					<Select bind:value={sortColumn} class="w-1/6">
-						<option value="id">#</option>
-						<option value="name">Name</option>
-						<option value="age">Age</option>
-						<option value="origin">Origin</option>
-						<option value="speechFiles">Total Number of Recorded Speech</option>
-					</Select>
-
-					<Button on:click={printTable} class="w-1/8 bg-gray-500 text-white">Print</Button>
-				</div>
+					<Button on:click={printTable} class="shrink-0 bg-gray-500 text-white">Print</Button>
+				</TableControls>
 
 				<!-- Paginated Table (Hidden in print) -->
 				<div class="hidden-print mt-6 rounded-lg bg-white p-3 shadow">

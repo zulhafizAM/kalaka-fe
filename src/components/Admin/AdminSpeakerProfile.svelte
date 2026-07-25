@@ -13,12 +13,12 @@
 	} from 'flowbite-svelte';
 	import { onMount } from 'svelte';
 	import Sidebar from '../Sidebar.svelte';
+	import TableControls from '../TableControls.svelte';
 	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	// import { speakerData } from '../../backend/speakers.js';
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 	let speakerData = [];
-	let searchTerm = '';
 	let error = null;
 	let currentPage = 1;
 	let itemsPerPage = 10;
@@ -47,19 +47,28 @@
 		items = [...speakerData];
 	}
 
-	$: filteredData = items
-		.filter((item) =>
-			Object.values(item).some((value) =>
-				String(value).toLowerCase().includes(searchTerm.toLowerCase())
-			)
-		)
-		.sort((a, b) => {
-			const valA = a[sortColumn]?.toString().toLowerCase() ?? '';
-			const valB = b[sortColumn]?.toString().toLowerCase() ?? '';
-			if (valA < valB) return sortAscending ? -1 : 1;
-			if (valA > valB) return sortAscending ? 1 : -1;
-			return 0;
-		});
+	// Columns exposed to the dynamic search/filter toolbar.
+	const tableColumns = [
+		{ key: 'name', label: 'Name' },
+		{ key: 'gender', label: 'Gender' },
+		{ key: 'age', label: 'Age' },
+		{ key: 'mobile', label: 'Mobile' },
+		{ key: 'origin', label: 'Place of Origin' },
+		{ key: 'language', label: 'Language' },
+		{ key: 'recordings', label: 'Total Recordings' },
+		{ key: 'kalaka_id', label: 'Kalaka ID' }
+	];
+
+	/** Rows after search + filters; sorting is applied on top. */
+	let queried = [];
+
+	$: filteredData = [...queried].sort((a, b) => {
+		const valA = a[sortColumn]?.toString().toLowerCase() ?? '';
+		const valB = b[sortColumn]?.toString().toLowerCase() ?? '';
+		if (valA < valB) return sortAscending ? -1 : 1;
+		if (valA > valB) return sortAscending ? 1 : -1;
+		return 0;
+	});
 
 	$: totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -131,24 +140,28 @@
 			<h1 class="text-xl font-bold">Speaker Profile</h1>
 		</div>
 
-		<div class="mb-4 flex gap-4">
-			<Input type="text" placeholder="Search..." bind:value={searchTerm} class="w-full sm:w-1/4" />
-			<Select bind:value={sortColumn} class="w-full sm:w-1/4">
-				<option value="id">#</option>
-				<option value="name">Name</option>
-				<option value="gender">Gender</option>
-				<option value="age">Age</option>
-				<option value="mobile">Mobile</option>
-				<option value="origin">Place of Origin</option>
-				<option value="language">Language</option>
-				<option value="recordings">Total Recordings</option>
+		<TableControls
+			rows={items}
+			columns={tableColumns}
+			bind:filtered={queried}
+			searchPlaceholder="Search speakers..."
+		>
+			<Select bind:value={sortColumn} class="w-full sm:w-44">
+				<option value="id">Sort: #</option>
+				<option value="name">Sort: Name</option>
+				<option value="gender">Sort: Gender</option>
+				<option value="age">Sort: Age</option>
+				<option value="mobile">Sort: Mobile</option>
+				<option value="origin">Sort: Place of Origin</option>
+				<option value="language">Sort: Language</option>
+				<option value="recordings">Sort: Total Recordings</option>
 			</Select>
-			<Select bind:value={sortAscending} class="w-full sm:w-1/4">
+			<Select bind:value={sortAscending} class="w-full sm:w-36">
 				<option value={true}>Ascending</option>
 				<option value={false}>Descending</option>
 			</Select>
-			<Button on:click={printTable} class="w-full bg-gray-600 text-white sm:w-1/6">Print</Button>
-		</div>
+			<Button on:click={printTable} class="shrink-0 bg-gray-600 text-white">Print</Button>
+		</TableControls>
 
 		<!-- Table -->
 		<div class="hidden-print overflow-x-auto rounded bg-white p-4 shadow">

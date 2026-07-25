@@ -18,6 +18,7 @@
 	} from 'flowbite-svelte';
 	import { ChevronDownOutline } from 'flowbite-svelte-icons';
 	import { onMount } from 'svelte';
+	import TableControls from './TableControls.svelte';
 	// import { speechData } from '../backend/speech.js';
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 	const PYTHON_URL = import.meta.env.VITE_API_PYTHON_URL;
@@ -243,7 +244,6 @@
 
 	let isSidebarOpen = true;
 	let items = [];
-	let searchTermm = '';
 	let sortColumn = 'id';
 	let sortAscending = true;
 	let currentPage = 1;
@@ -365,11 +365,22 @@
 		}));
 	}
 
-	$: filteredData = items.filter(
-		(file) =>
-			Number(file.public) === 2 &&
-			file.speaker_name.toLowerCase().includes(searchTermm.toLowerCase())
-	);
+	// Columns exposed to the dynamic search/filter toolbar.
+	const tableColumns = [
+		{ key: 'speaker_name', label: 'Speaker Name' },
+		{ key: 'origin', label: 'Origin' },
+		{ key: 'language', label: 'Language' },
+		{ key: 'category', label: 'Category' },
+		{ key: 'recorded_date', label: 'Recorded Date' }
+	];
+
+	// Only publicly approved records are searchable/filterable on this surface.
+	$: publicItems = items.filter((file) => Number(file.public) === 2);
+
+	/** Rows after search + filters; sorting is applied on top. */
+	let queried = [];
+
+	$: filteredData = queried;
 
 	$: totalItems = filteredData.length;
 
@@ -378,7 +389,8 @@
 		currentPage * itemsPerPage
 	);
 
-	$: if (searchTermm !== undefined) currentPage = 1;
+	// Keep the current page within range as the result set shrinks.
+	$: if (totalItems >= 0) currentPage = Math.min(currentPage, Math.max(1, Math.ceil(totalItems / itemsPerPage)));
 	// Keep your data fetching onMount
 	onMount(async () => {
 		try {
@@ -804,26 +816,25 @@
 		</div>
 	</TabItem>
 	<TabItem title="Audios">
-		<div class="mb-4 flex gap-4">
-			<Input
-				type="text"
-				placeholder="Search by speaker name"
-				bind:value={searchTermm}
-				class="w-full sm:w-1/4"
-			/>
-			<Select bind:value={sortColumn} on:change={sortTable} class="w-full sm:w-1/4">
-				<option value="id">#</option>
-				<option value="speaker_name">Speaker Name</option>
-				<option value="origin">Origin</option>
-				<option value="language">Language</option>
-				<option value="recorded_date">Recorded Date</option>
+		<TableControls
+			rows={publicItems}
+			columns={tableColumns}
+			bind:filtered={queried}
+			searchPlaceholder="Search audios..."
+		>
+			<Select bind:value={sortColumn} on:change={sortTable} class="w-full sm:w-44">
+				<option value="id">Sort: #</option>
+				<option value="speaker_name">Sort: Speaker Name</option>
+				<option value="origin">Sort: Origin</option>
+				<option value="language">Sort: Language</option>
+				<option value="recorded_date">Sort: Recorded Date</option>
 			</Select>
-			<Select bind:value={sortAscending} on:change={sortTable} class="w-full sm:w-1/4">
+			<Select bind:value={sortAscending} on:change={sortTable} class="w-full sm:w-36">
 				<option value={true}>Ascending</option>
 				<option value={false}>Descending</option>
 			</Select>
-			<Button on:click={printTable} class="w-1/6 bg-gray-500 text-white">Print</Button>
-		</div>
+			<Button on:click={printTable} class="shrink-0 bg-gray-500 text-white">Print</Button>
+		</TableControls>
 
 		<div class="mt-6 overflow-x-auto rounded-lg bg-white p-6 shadow">
 			<div class="min-w-[1200px]">

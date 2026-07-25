@@ -16,6 +16,7 @@
 	import axios from 'axios';
 	import { diarizeAudio } from '$lib/api.js';
 	import Sidebar from '../Sidebar.svelte';
+	import TableControls from '../TableControls.svelte';
 	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	// import { speechData } from '../../backend/speech.js';
@@ -25,7 +26,6 @@
 	let isLoading = false;
 	let error = null;
 	let items = [];
-	let searchTerm = '';
 	let sortColumn = 'id';
 	let sortAscending = true;
 	let currentPage = 1;
@@ -231,14 +231,27 @@
 			recorded_date: item.date,
 			kalaka_id: item.kalaka_id,
 			public: item.public,
+			// Human-readable mirror of `public`, so search/filter show words not codes.
+			visibility: Number(item.public) === 2 ? 'Public' : 'Private',
 			textcontent: item.textcontent
 		}));
 		sortTable();
 	}
 
-	$: filteredData = items.filter((file) =>
-		file.speaker_name.toLowerCase().includes(searchTerm.toLowerCase())
-	);
+	// Columns exposed to the dynamic search/filter toolbar.
+	const tableColumns = [
+		{ key: 'speaker_name', label: 'Speaker Name' },
+		{ key: 'num_speakers', label: 'No. of Speakers' },
+		{ key: 'contact_no', label: 'Contact No' },
+		{ key: 'origin', label: 'Origin' },
+		{ key: 'language', label: 'Language' },
+		{ key: 'category', label: 'Category' },
+		{ key: 'recorded_date', label: 'Recorded Date' },
+		{ key: 'kalaka_id', label: 'Kalaka ID' },
+		{ key: 'visibility', label: 'Visibility' }
+	];
+
+	let filteredData = [];
 
 	$: totalItems = filteredData.length;
 
@@ -247,7 +260,8 @@
 		currentPage * itemsPerPage
 	);
 
-	$: if (searchTerm !== undefined) currentPage = 1;
+	// Keep the current page within range as the result set shrinks.
+	$: if (totalItems >= 0) currentPage = Math.min(currentPage, Math.max(1, Math.ceil(totalItems / itemsPerPage)));
 
 	function playAudio(audioUrl) {
 		new Audio(audioUrl).play();
@@ -362,29 +376,28 @@
 			<h1 class="text-xl font-bold">Speech Data</h1>
 		</div>
 
-		<div class="mb-4 flex gap-4">
-			<Input
-				type="text"
-				placeholder="Search by speaker name"
-				bind:value={searchTerm}
-				class="w-full sm:w-1/4"
-			/>
-			<Select bind:value={sortColumn} on:change={sortTable} class="w-full sm:w-1/4">
-				<option value="id">#</option>
-				<option value="speaker_name">Speaker Name</option>
-				<option value="num_speakers">No. of Speakers</option>
-				<option value="contact_no">Contact No</option>
-				<option value="origin">Origin</option>
-				<option value="language">Language</option>
-				<option value="category">Category</option>
-				<option value="recorded_date">Recorded Date</option>
+		<TableControls
+			rows={items}
+			columns={tableColumns}
+			bind:filtered={filteredData}
+			searchPlaceholder="Search speeches..."
+		>
+			<Select bind:value={sortColumn} on:change={sortTable} class="w-full sm:w-44">
+				<option value="id">Sort: #</option>
+				<option value="speaker_name">Sort: Speaker Name</option>
+				<option value="num_speakers">Sort: No. of Speakers</option>
+				<option value="contact_no">Sort: Contact No</option>
+				<option value="origin">Sort: Origin</option>
+				<option value="language">Sort: Language</option>
+				<option value="category">Sort: Category</option>
+				<option value="recorded_date">Sort: Recorded Date</option>
 			</Select>
-			<Select bind:value={sortAscending} on:change={sortTable} class="w-full sm:w-1/4">
+			<Select bind:value={sortAscending} on:change={sortTable} class="w-full sm:w-36">
 				<option value={true}>Ascending</option>
 				<option value={false}>Descending</option>
 			</Select>
-			<Button on:click={printTable} class="w-1/6 bg-gray-500 text-white">Print</Button>
-		</div>
+			<Button on:click={printTable} class="shrink-0 bg-gray-500 text-white">Print</Button>
+		</TableControls>
 
 		<!-- Table Container with Horizontal Scroll -->
 		<div class="mt-6 overflow-x-auto rounded-lg bg-white p-6 shadow">

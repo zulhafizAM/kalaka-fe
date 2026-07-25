@@ -14,12 +14,12 @@
 	import { onMount } from 'svelte';
 	import { getSession } from '$lib/auth.ts';
 	import Sidebar from '../Sidebar.svelte';
+	import TableControls from '../TableControls.svelte';
 	import { sidebarOpen } from '$lib/stores/sidebar.js';
 
 	const API_URL = import.meta.env.VITE_API_BASE_URL;
 	let speakerData: Record<string, any>[] = [];
 	let usersData: Record<string, any>[] = [];
-	let searchQuery = '';
 	let sortColumn = 'id';
 	let sortDirection = 'asc';
 	let currentPage = 1;
@@ -72,25 +72,35 @@
 				...user,
 				...speaker,
 				name: user.full_name,
+				// Mirror the rendered fallback so search/filter match what's on screen.
+				role: user.role ?? 'User',
 				origin: speaker?.origin || 'Unknown',
 				recordings: speaker?.recordings || 0
 			};
 		});
 	}
 
-	$: filteredData = mergedData
-		.filter((item) =>
-			Object.values(item).some((value) =>
-				String(value).toLowerCase().includes(searchQuery.toLowerCase())
-			)
-		)
-		.sort((a, b) => {
-			if (!sortColumn) return 0;
-			const valA = a[sortColumn] ?? '';
-			const valB = b[sortColumn] ?? '';
-			if (sortDirection === 'asc') return valA > valB ? 1 : -1;
-			else return valA < valB ? 1 : -1;
-		});
+	// Columns exposed to the dynamic search/filter toolbar.
+	const tableColumns = [
+		{ key: 'kalaka_id', label: 'User ID' },
+		{ key: 'name', label: 'Name' },
+		{ key: 'email', label: 'Email' },
+		{ key: 'role', label: 'Role' },
+		{ key: 'origin', label: 'Origin' },
+		{ key: 'recordings', label: 'Recordings' },
+		{ key: 'created_at', label: 'Created At' }
+	];
+
+	/** Rows after search + filters; sorting is applied on top. */
+	let queried = [];
+
+	$: filteredData = [...queried].sort((a, b) => {
+		if (!sortColumn) return 0;
+		const valA = a[sortColumn] ?? '';
+		const valB = b[sortColumn] ?? '';
+		if (sortDirection === 'asc') return valA > valB ? 1 : -1;
+		else return valA < valB ? 1 : -1;
+	});
 
 	$: totalPages = Math.ceil(filteredData.length / itemsPerPage);
 	$: paginatedData = filteredData.slice(
@@ -186,26 +196,26 @@
 			<Button on:click={openAddModal} class="bg-blue-600 text-white">+ Add User</Button>
 		</div>
 
-		<div class="searchfilter mb-4 flex gap-4">
-			<Input
-				type="text"
-				placeholder="Search by name, email, etc."
-				bind:value={searchQuery}
-				class="w-1/3"
-			/>
-			<Select bind:value={sortDirection} class="w-1/6">
+		<TableControls
+			rows={mergedData}
+			columns={tableColumns}
+			bind:filtered={queried}
+			searchPlaceholder="Search users..."
+		>
+			<Select bind:value={sortColumn} class="w-full sm:w-44">
+				<option value="id">Sort: #</option>
+				<option value="kalaka_id">Sort: User ID</option>
+				<option value="name">Sort: Name</option>
+				<option value="email">Sort: Email</option>
+				<option value="role">Sort: Role</option>
+				<option value="created_at">Sort: Created Date</option>
+			</Select>
+			<Select bind:value={sortDirection} class="w-full sm:w-36">
 				<option value="asc">Ascending</option>
 				<option value="desc">Descending</option>
 			</Select>
-			<Select bind:value={sortColumn} class="w-1/4">
-				<option value="id">#</option>
-				<option value="kalaka_id">User ID</option>
-				<option value="name">Name</option>
-				<option value="email">Email</option>
-				<option value="created_at">Created Date</option>
-			</Select>
-			<Button on:click={printTable} class="bg-gray-500 text-white">Print</Button>
-		</div>
+			<Button on:click={printTable} class="shrink-0 bg-gray-500 text-white">Print</Button>
+		</TableControls>
 
 		<!-- User Table -->
 		<div class="hidden-print overflow-x-auto rounded bg-white p-4 shadow">
