@@ -270,7 +270,7 @@
 	let showDetailsModal = false;
 	let selectedAudio = null;
 
-	async function handleDiarize(audioSrc, audio) {
+	async function handleDiarize(audioSrc) {
 		loading = true;
 		error = null;
 		try {
@@ -288,28 +288,9 @@
 
 			const imageBlob = await diarizeAudio(audioFile);
 
-			const uploadRTTMRequest = {
-				name: audio.speaker_name,
-				category: audio.category,
-				date: audio.recorded_date,
-				kalaka_id: audio.kalaka_id,
-				language: audio.language,
-				mobile: audio.contact_no,
-				origin: audio.origin,
-				recordfile: audio.recordfile,
-				textgrid: audio.textgrid_url,
-				rttm: imageBlob.rttm_url,
-				textcontent: audio.textcontent,
-				speakerno: audio.num_speakers,
-				public: audio.public
-			};
-
-			await axios.put(`${API_URL}/speech/${audio.id}`, uploadRTTMRequest);
-
+			// Public visitors only view the result; saving the RTTM to the speech is
+			// done from the owner/admin dashboards (PUT /speech requires login).
 			selectedAudio.rttm = imageBlob.rttm_url;
-
-			const speechRes = await axios.post(`${API_URL}/speeches`);
-			items = speechRes.data;
 
 			diarized = true;
 		} catch (err) {
@@ -1091,8 +1072,7 @@
 															<button
 																on:click={() =>
 																	handleDiarize(
-																		`${API_URL}/audio/` + selectedAudio.recordfile,
-																		selectedAudio
+																		`${API_URL}/audio/` + selectedAudio.recordfile
 																	)}
 																class="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white transition-colors duration-200 hover:bg-green-700"
 															>
