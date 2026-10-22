@@ -18,7 +18,8 @@ export async function diarizeAudio(audioFile) {
         
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Server responded with ${response.status}`);
+            // kalaka-diarization returns failures as { error: "<message>" }.
+            throw new Error(errorData.error || errorData.detail || `Server responded with ${response.status}`);
         }
         else
             return await response.json();
