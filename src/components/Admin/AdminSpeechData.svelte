@@ -160,6 +160,8 @@
 	}
 
 	function getTime(duration: number) {
+		// The duration is Infinity/NaN until the browser knows the file's length.
+		if (!Number.isFinite(duration)) return { minutes: '--', seconds: '--' };
 		const minute = Math.floor(duration / 60);
 		const second = duration % 60;
 		return { minutes: padTime(minute), seconds: padTime(second) };
